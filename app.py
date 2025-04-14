@@ -1,54 +1,41 @@
 import streamlit as st
-import sklearn
-import pandas as pd
-import pickle
-pipe = pickle.load(open('pipe.pkl','rb'))
-st.title('IPL Win Predictor')
-teams = sorted(['Sunrisers Hyderabad',
- 'Mumbai Indians',
- 'Royal Challengers Bangalore',
- 'Kolkata Knight Riders',
- 'Kings XI Punjab',
- 'Chennai Super Kings',
- 'Rajasthan Royals',
- 'Delhi Capitals'])
 
-col1,col2 = st.columns(2)
+st.title('Cardio Diagnóstico')
 
-with col1:
-    batting_team =st.selectbox('Select the batting team',teams)
-with col2:
-    bowling_team = st.selectbox('Select the bowling team',teams)
-    
-cities = ['Hyderabad', 'Bangalore', 'Mumbai', 'Indore', 'Kolkata', 'Delhi',
-       'Chandigarh', 'Jaipur', 'Chennai', 'Cape Town', 'Port Elizabeth',
-       'Durban', 'Centurion', 'East London', 'Johannesburg', 'Kimberley',
-       'Bloemfontein', 'Ahmedabad', 'Cuttack', 'Nagpur', 'Dharamsala',
-       'Visakhapatnam', 'Pune', 'Raipur', 'Ranchi', 'Abu Dhabi',
-       'Sharjah', 'Mohali', 'Bengaluru']
+# Entradas del usuario
+hr = st.number_input('Frecuencia cardíaca (ppm)', min_value=30, max_value=200, value=75)
+qrs = st.number_input('Duración del QRS (ms)', min_value=40, max_value=200, value=100)
+pr = st.number_input('Intervalo PR (ms)', min_value=80, max_value=320, value=160)
+qt = st.number_input('Intervalo QT (ms)', min_value=150, max_value=600, value=400)
+rms = st.number_input('RMS de la señal ECG', min_value=0.0, value=0.2)
 
-selected_city = st.selectbox('Cities',sorted(cities))
+# Botón para analizar
+if st.button('Analizar ECG'):
+    st.subheader('Resultados del análisis:')
 
-target = st.number_input('Target',min_value=0)
+    if hr < 60:
+        st.warning("Frecuencia cardíaca baja: posible bradicardia")
+    elif hr > 100:
+        st.warning("Frecuencia cardíaca alta: posible taquicardia")
+    else:
+        st.success("Frecuencia cardíaca en rango normal")
 
-col3,col4,col5 = st.columns(3)
-with col3 :
-    score =st.number_input('Score',min_value=0)
-with col4 :
-    wickets =st.number_input('Wickets',min_value=0,max_value=9)
-with col5 :
-    overs = st.number_input('Overs completed',min_value=0,max_value=20)
-    
-if st.button('Predict Probability'):
-    runs_left = target-score
-    balls_left = 120 - overs*6
-    wickets = 10-wickets
-    crr = score/overs
-    rrr = runs_left*6/balls_left
-    df =pd.DataFrame({'batting_team':[batting_team],'bowling_team':[bowling_team],'city':[selected_city],'runs_left':[runs_left],'balls_left':[balls_left],'wickets':[wickets],'total_runs_x':[target],'crr':[crr],'rrr':[rrr]})    
-    result = pipe.predict_proba(df)
-    r_1 = round(result[0][0]*100)
-    r_2 = round(result[0][1]*100)
-    st.header('Wining Probabilty ')
-    st.header(f"{batting_team}  : {r_2} %")
-    st.header(f"{bowling_team}  : {r_1} %")
+    if qrs > 120:
+        st.warning("QRS prolongado: posible bloqueo de rama")
+    else:
+        st.success("Duración del QRS en rango normal")
+
+    if pr < 120 or pr > 200:
+        st.warning("PR fuera de rango: posible anormalidad del nodo AV")
+    else:
+        st.success("Intervalo PR normal")
+
+    if qt > 450:
+        st.warning("QT prolongado: riesgo de arritmia")
+    else:
+        st.success("Intervalo QT dentro de lo normal")
+
+    if rms < 0.1:
+        st.warning("RMS bajo: señal débil o posible hipovolemia")
+    else:
+        st.success("RMS de la señal ECG aceptable")
